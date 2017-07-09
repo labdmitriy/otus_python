@@ -29,6 +29,7 @@
 from itertools import combinations, product
 from pandas import Series
 import numpy as np
+from copy import copy
 
 def hand_rank(hand):
     """Возвращает значение определяющее ранг 'руки'"""
@@ -135,20 +136,23 @@ def best_wild_hand(hand):
         free_red_cards = list(set(red_cards) - set(used_cards))
         free_black_cards = list(set(black_cards) - set(used_cards))
         
+        possible_hand = copy(hand)
         for joker in jokers:
-            if hand[joker].endswith('R'):
-                hand[joker] = free_red_cards
+            if possible_hand[joker].endswith('R'):
+                possible_hand[joker] = free_red_cards
             else:
-                hand[joker] = free_black_cards
+                possible_hand[joker] = free_black_cards
             
-        cards_list = map(lambda x: [x] if not isinstance(x, list) else x, hand)
+        cards_list = map(lambda x: [x] if not isinstance(x, list) else x, 
+                         possible_hand)
         hands = list(product(*cards_list))
         
         cards_count = 5    
         max_ranks_list = []
         
         for curr_hand in hands:
-            max_rank = max(combinations(curr_hand, cards_count), key = hand_rank)
+            max_rank = max(combinations(curr_hand, cards_count), 
+                           key = hand_rank)
             max_ranks_list.append(max_rank)
     else:
         return (best_hand(hand))
@@ -170,12 +174,12 @@ def test_best_hand():
 
 def test_best_wild_hand():
     print "test_best_wild_hand..."
-#    assert (sorted(best_wild_hand("6C 7C 8C 9C TC 5C ?B".split()))
-#            == ['7C', '8C', '9C', 'JC', 'TC'])
+    assert (sorted(best_wild_hand("6C 7C 8C 9C TC 5C ?B".split()))
+            == ['7C', '8C', '9C', 'JC', 'TC'])
     assert (sorted(best_wild_hand("TD TC 5H 5C 7C ?R ?B".split()))
             == ['7C', 'TC', 'TD', 'TH', 'TS'])
-#    assert (sorted(best_wild_hand("JD TC TH 7C 7D 7S 7H".split()))
-#            == ['7C', '7D', '7H', '7S', 'JD'])
+    assert (sorted(best_wild_hand("JD TC TH 7C 7D 7S 7H".split()))
+            == ['7C', '7D', '7H', '7S', 'JD'])
     print 'OK'
 
 if __name__ == '__main__':
