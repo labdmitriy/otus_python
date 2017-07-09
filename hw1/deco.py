@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from functools import update_wrapper
+from functools import update_wrapper, wraps
 
 
-def disable():
+def disable(deco):
     '''
     Disable a decorator by re-assigning the decorator's name
     to this function. For example, to turn off memoization:
@@ -12,36 +12,75 @@ def disable():
     >>> memo = disable
 
     '''
+    
     return
 
 
-def decorator():
+def decorator(dec):
     '''
     Decorate a decorator so that it inherits the docstrings
     and stuff from the function it's decorating.
     '''
-    return
+    def dec(wrapper):
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
 
+        update_wrapper(dec, func)
+    
+    return dec
 
-def countcalls():
+def countcalls(func):
     '''Decorator that counts calls made to the function decorated.'''
-    return
+    def wrapper(*args, **kwargs):
+        wrapper.calls += 1
+        return func(*args, **kwargs)
+    wrapper.calls = 0
+    
+    return wrapper
 
-
-def memo():
+@decorator
+def memo(func):
     '''
     Memoize a function so that it caches all return values for
     faster future lookups.
     '''
-    return
+    cache = {}
+    #@wraps(func)
+    def wrapper(*args, **kwargs):
+        if args not in cache:
+            cache[args] = func(*args, **kwargs)
+        return cache[args]
+    
+    return wrapper
 
 
-def n_ary():
+def n_ary(func):
     '''
     Given binary function f(x, y), return an n_ary function such
     that f(x, y, z) = f(x, f(y,z)), etc. Also allow f(x) = x.
     '''
-    return
+    def wrapper(*args, **kwargs):
+        args_count = len(args)
+        
+        if args_count > 2:
+            x, y = args[-2:]
+            args = args[:-2]
+            res = func(x, y)
+            
+            while(args):
+                res = func(args[-1], res, **kwargs)
+                args = args[:-1]
+                
+            return res
+        elif args_count == 2:
+            return func(*args)
+        elif args_count == 1:
+            return args[0]
+        else:
+            return None
+    
+    return wrapper
 
 
 def trace():
@@ -66,7 +105,6 @@ def trace():
     '''
     return
 
-
 @memo
 @countcalls
 @n_ary
@@ -82,7 +120,7 @@ def bar(a, b):
 
 
 @countcalls
-@trace("####")
+#@trace("####")
 @memo
 def fib(n):
     return 1 if n <= 1 else fib(n-1) + fib(n-2)
@@ -101,6 +139,7 @@ def main():
 
     print fib.__doc__
     fib(3)
+
     print fib.calls, 'calls made'
 
 
