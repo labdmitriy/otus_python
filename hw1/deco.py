@@ -16,19 +16,18 @@ def disable(deco):
     return
 
 
-def decorator(wrapper):
+def decorator(deco):
     '''
     Decorate a decorator so that it inherits the docstrings
     and stuff from the function it's decorating.
     '''
     def real_decorator(func):
         def wrapper(*args, **kwargs):
-            func(*args, **kwargs)
-        
-            update_wrapper(wrapper, func)
-        
+            result = deco(func(*args, **kwargs))
+            return result
+        update_wrapper(wrapper, func)
         return wrapper
-    return real_decorator
+    #return real_decorator
 
 def countcalls(func):
     '''Decorator that counts calls made to the function decorated.'''
@@ -51,7 +50,7 @@ def memo(func):
         if args not in cache:
             cache[args] = func(*args, **kwargs)
         return cache[args]
-    
+    update_wrapper(wrapper, func)
     return wrapper
 
 
