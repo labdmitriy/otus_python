@@ -7,6 +7,10 @@
 #                     '"$http_user_agent" "$http_x_forwarded_for" "$http_X_REQUEST_ID" "$http_X_RB_USER" '
 #                     '$request_time';
 
+import gzip
+import fnmatch
+import os
+
 config = {
     "REPORT_SIZE": 1000,
     "REPORT_DIR": "./reports",
@@ -14,8 +18,22 @@ config = {
 }
 
 
+def gen_open(file_name):
+    if file_name.endswith(".gz"):
+        yield gzip.open(file_name)
+    else:
+        yield open(file_name)
+
+
+def gen_find(filepat, top):
+    for path, dirlist, filelist in os.walk(top):
+        for name in fnmatch.filter(filelist, filepat):
+            yield os.path.join(path, name)       
+        
+
+
 def main():
-    pass
+    
 
 if __name__ == "__main__":
     main()

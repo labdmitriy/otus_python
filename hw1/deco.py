@@ -16,19 +16,19 @@ def disable(deco):
     return
 
 
-def decorator(dec):
+def decorator(wrapper):
     '''
     Decorate a decorator so that it inherits the docstrings
     and stuff from the function it's decorating.
     '''
-    def dec(wrapper):
+    def real_decorator(func):
         def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
+            func(*args, **kwargs)
+        
+            update_wrapper(wrapper, func)
+        
         return wrapper
-
-        update_wrapper(dec, func)
-    
-    return dec
+    return real_decorator
 
 def countcalls(func):
     '''Decorator that counts calls made to the function decorated.'''

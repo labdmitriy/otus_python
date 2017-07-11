@@ -112,6 +112,30 @@ def two_pair(ranks):
 #    
 #    return result
         
+def generate_possible_hands(hand, jokers):
+    hand_series = Series(hand)
+    cards = '23456789TJQKA'
+    
+    red_cards = map(lambda x: ''.join(x), product(cards, 'DH'))
+    black_cards = map(lambda x: ''.join(x), product(cards, 'CS'))
+    
+    used_cards = hand_series[~hand_series.str.startswith('?')]
+    free_red_cards = list(set(red_cards) - set(used_cards))
+    free_black_cards = list(set(black_cards) - set(used_cards))
+    
+    possible_hand = copy(hand)
+    for joker in jokers:
+        if possible_hand[joker].endswith('R'):
+            possible_hand[joker] = free_red_cards
+        else:
+            possible_hand[joker] = free_black_cards
+        
+    cards_list = map(lambda x: [x] if not isinstance(x, list) else x, 
+                     possible_hand)
+    hands = list(product(*cards_list))
+    
+    return hands
+
     
 def best_hand(hand):
     """Из "руки" в 7 карт возвращает лучшую "руку" в 5 карт """
@@ -128,24 +152,7 @@ def best_wild_hand(hand):
     hand_series = Series(hand)
     jokers = hand_series[hand_series.str.startswith('?')].index
     if np.any(jokers):       
-        cards = '23456789TJQKA'
-        red_cards = map(lambda x: ''.join(x), product(cards, 'DH'))
-        black_cards = map(lambda x: ''.join(x), product(cards, 'CS'))
-        
-        used_cards = hand_series[~hand_series.str.startswith('?')]
-        free_red_cards = list(set(red_cards) - set(used_cards))
-        free_black_cards = list(set(black_cards) - set(used_cards))
-        
-        possible_hand = copy(hand)
-        for joker in jokers:
-            if possible_hand[joker].endswith('R'):
-                possible_hand[joker] = free_red_cards
-            else:
-                possible_hand[joker] = free_black_cards
-            
-        cards_list = map(lambda x: [x] if not isinstance(x, list) else x, 
-                         possible_hand)
-        hands = list(product(*cards_list))
+        hands = generate_possible_hands(hand, jokers)
         
         cards_count = 5    
         max_ranks_list = []
