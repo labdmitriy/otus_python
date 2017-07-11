@@ -16,6 +16,7 @@ def disable(deco):
     return
 
 
+# Not working
 def decorator(deco):
     '''
     Decorate a decorator so that it inherits the docstrings
@@ -38,19 +39,19 @@ def countcalls(func):
     
     return wrapper
 
-@decorator
+# Not working
 def memo(func):
     '''
     Memoize a function so that it caches all return values for
     faster future lookups.
     '''
     cache = {}
-    #@wraps(func)
+    @wraps(func)
     def wrapper(*args, **kwargs):
         if args not in cache:
             cache[args] = func(*args, **kwargs)
         return cache[args]
-    update_wrapper(wrapper, func)
+    # update_wrapper(wrapper, func)
     return wrapper
 
 
