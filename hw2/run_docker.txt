@@ -1,0 +1,3 @@
+ sudo docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v ~/Education/otus/git/hw2:/tmp/bin centos-otus /bin/bash
+
+ sudo docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v ~/Education/otus/git/hw2:/tmp/bin centos-otus-patched /bin/bash
