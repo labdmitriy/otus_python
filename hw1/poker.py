@@ -27,8 +27,7 @@
 # -----------------
 
 from itertools import combinations, product
-from pandas import Series
-import numpy as np
+import re
 from copy import copy
 
 def hand_rank(hand):
@@ -112,23 +111,23 @@ def two_pair(ranks):
 #    
 #    return result
         
-def generate_possible_hands(hand, jokers):
-    hand_series = Series(hand)
+def generate_possible_hands(hand, jokers_index_list):
     cards = '23456789TJQKA'
+    r = re.compile('^\?\w$')
     
     red_cards = map(lambda x: ''.join(x), product(cards, 'DH'))
     black_cards = map(lambda x: ''.join(x), product(cards, 'CS'))
     
-    used_cards = hand_series[~hand_series.str.startswith('?')]
-    free_red_cards = list(set(red_cards) - set(used_cards))
-    free_black_cards = list(set(black_cards) - set(used_cards))
+    used_cards = {x for x in hand if not r.match(x)}
+    free_red_cards = list(set(red_cards) - used_cards)
+    free_black_cards = list(set(black_cards) - used_cards)
     
     possible_hand = copy(hand)
-    for joker in jokers:
-        if possible_hand[joker].endswith('R'):
-            possible_hand[joker] = free_red_cards
+    for joker_index in jokers_index_list:
+        if possible_hand[joker_index].endswith('R'):
+            possible_hand[joker_index] = free_red_cards
         else:
-            possible_hand[joker] = free_black_cards
+            possible_hand[joker_index] = free_black_cards
         
     cards_list = map(lambda x: [x] if not isinstance(x, list) else x, 
                      possible_hand)
@@ -148,11 +147,11 @@ def best_hand(hand):
 
 def best_wild_hand(hand):
     """best_hand но с джокерами"""
+    r = re.compile('^\?\w$')
     
-    hand_series = Series(hand)
-    jokers = hand_series[hand_series.str.startswith('?')].index
-    if np.any(jokers):       
-        hands = generate_possible_hands(hand, jokers)
+    jokers_index_list = [i for i, x in enumerate(hand) if r.match(x)]
+    if jokers_index_list:       
+        hands = generate_possible_hands(hand, jokers_index_list)
         
         cards_count = 5    
         max_ranks_list = []
