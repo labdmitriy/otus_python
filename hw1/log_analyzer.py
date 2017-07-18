@@ -13,6 +13,7 @@ from collections import defaultdict
 from string import Template
 from shutil import copyfile
 from itertools import ifilter
+from bisect import insort
 
 
 
@@ -97,51 +98,70 @@ def main():
     counter = defaultdict(int)
     timer = defaultdict(float)
     max_value = defaultdict(float)
+    median = defaultdict(float)
     
     for log_line in log:
-        counter[log_line['request']] += 1
-        timer[log_line['request']] += log_line['request_time']
-        if max_value[log_line['request']] < log_line['request_time']:
-            max_value[log_line['request']] = log_line['request_time']
+        request = log_line['request']
+        request_time = log_line['request_time']
+        
+        counter[request] += 1
+        timer[request] += request_time
+        
+        if max_value[request] < request_time:
+            max_value[request] = request_time
+        
+        if request not in median:
+            median[request] = []
+        insort(median[request], request_time)
+    
+    all_time = sum({request_time for request_time in timer.itervalues()})
+    all_count = sum({count for count in counter.itervalues()})
+
+    timer = [(key, timer[key]) 
+             for key in sorted(timer, key = timer.get, reverse=True)][:REPORT_SIZE]
+    timer = dict(timer)
+    print(timer)
     
     
-    counter_series = Series(counter)
-    timer_series = Series(timer)
-    max_value_series = Series(max_value)
-    
-    stats_df = pd.concat([timer_series, counter_series, max_value_series],
-                         axis = 1, ignore_index = True).reset_index()
-    stats_df.columns = ['url', 'time_sum', 'count', 'time_max']
-    stats_df.sort_values('time_sum', axis = 0, ascending = False, inplace = True)
-    
-    all_time = stats_df['time_sum'].sum()
-    all_count = stats_df['count'].sum()
-    
-    stats_df['time_sum'] = np.round(stats_df['time_sum'], 3)
-    stats_df['count_perc'] = np.round((stats_df['count'] / all_count) * 100, 3)
-    stats_df['time_avg'] = np.round(stats_df['time_sum'] / stats_df['count'], 3)
-    stats_df['time_perc'] = np.round((stats_df['time_sum'] / all_time) * 100, 3)
-    
-    stats_df = stats_df.head(100)
-    
-    report_json = stats_df.to_json(orient = 'records')
-    report_template_path = os.path.join(os.curdir, 'template/report.html')
-    report_file_path = os.path.join(config['REPORT_DIR'], 'report-{}.html'.format(max_date_str))
-    report_template_path, report_file_path
-    
-    if not os.path.isdir(config['REPORT_DIR']):
-        os.makedirs(config['REPORT_DIR'])
-    
-    copyfile(report_template_path, report_file_path)
-    
-    with open(report_template_path, 'r') as f:
-        report_template = ''.join(f.readlines())
     
     
-    report = Template(report_template).safe_substitute({'table_json': report_json})
-    
-    with open(report_file_path, 'w') as f:
-        f.write(report)
+#    counter_series = Series(counter)
+#    timer_series = Series(timer)
+#    max_value_series = Series(max_value)
+#    
+#    stats_df = pd.concat([timer_series, counter_series, max_value_series],
+#                         axis = 1, ignore_index = True).reset_index()
+#    stats_df.columns = ['url', 'time_sum', 'count', 'time_max']
+#    stats_df.sort_values('time_sum', axis = 0, ascending = False, inplace = True)
+#    
+#    all_time = stats_df['time_sum'].sum()
+#    all_count = stats_df['count'].sum()
+#    
+#    stats_df['time_sum'] = np.round(stats_df['time_sum'], 3)
+#    stats_df['count_perc'] = np.round((stats_df['count'] / all_count) * 100, 3)
+#    stats_df['time_avg'] = np.round(stats_df['time_sum'] / stats_df['count'], 3)
+#    stats_df['time_perc'] = np.round((stats_df['time_sum'] / all_time) * 100, 3)
+#    
+#    stats_df = stats_df.head(100)
+#    
+#    report_json = stats_df.to_json(orient = 'records')
+#    report_template_path = os.path.join(os.curdir, 'template/report.html')
+#    report_file_path = os.path.join(config['REPORT_DIR'], 'report-{}.html'.format(max_date_str))
+#    report_template_path, report_file_path
+#    
+#    if not os.path.isdir(config['REPORT_DIR']):
+#        os.makedirs(config['REPORT_DIR'])
+#    
+#    copyfile(report_template_path, report_file_path)
+#    
+#    with open(report_template_path, 'r') as f:
+#        report_template = ''.join(f.readlines())
+#    
+#    
+#    report = Template(report_template).safe_substitute({'table_json': report_json})
+#    
+#    with open(report_file_path, 'w') as f:
+#        f.write(report)
 
 
 if __name__ == '__main__':

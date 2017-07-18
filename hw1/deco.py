@@ -4,7 +4,7 @@
 from functools import update_wrapper, wraps
 
 
-def disable(deco):
+def disable(func):
     '''
     Disable a decorator by re-assigning the decorator's name
     to this function. For example, to turn off memoization:
@@ -13,7 +13,7 @@ def disable(deco):
 
     '''
     
-    return
+    return func
 
 
 # Not working
